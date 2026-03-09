@@ -4,6 +4,7 @@ use async_std::prelude::*;
 use async_std::{task,io,net};
 use std::ops::RemAssign;
 use std::sync::Arc;
+use futures_lite::future::FutureExt;
 
 use chat::utils::{self, ChatResult};
 use chat::{Client, Server};
@@ -57,6 +58,35 @@ async fn send(mut send:TcpStream) -> ChatResult<()>{
     Ok(())
 }
 
-fn main(){
+async fn messages (server: TcpStream) -> ChatResult<()> {
+    let buf = io::BufReader::new(server);
+    let mut stream = utils::recieve(buf);
+    while let Some(msg) = stream.next().await{
+        match msg? {
+            Server::Message { chat_name, msg } => {
+                println!("Chat name: {:?}\n Message: {:?}", chat_name, msg);
 
+            }
+            Server::Error(msg) => {
+                println!("Error recived: {:?}", msg);
+            }
+        }
+    }
+    Ok(())
+}
+
+fn main() -> ChatResult<()>{
+    let addr = std::env::args().nth(1).expect("Address: PORT");
+    
+    task::block_on(async {
+        let socket = net::TcpStream::connect(addr).await?;
+        socket.set_nodelay(true)?;
+
+        let send = send(socket.clone());
+        let replies = messages(socket);
+
+        replies.race(send).await?;
+        
+        Ok(())
+    })
 }
