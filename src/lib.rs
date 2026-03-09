@@ -14,6 +14,7 @@ pub enum Client {
     
 }
 
+#[derive(Debug, Deserialize, Serialize, PartialEq)]
 pub enum Server {
     Message {
         chat_name: Arc<String>, 
