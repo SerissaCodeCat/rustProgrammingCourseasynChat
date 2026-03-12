@@ -10,7 +10,7 @@ pub struct Leaving (Mutex<TcpStream>);
 
 impl Leaving {
     pub fn new (client:TcpStream) -> Leaving {
-        Leaving(Mutex::new(client));
+        Leaving(Mutex::new(client))
     }
 
     pub async fn send (&self, packet: Server)-> ChatResult<()> {
@@ -20,7 +20,7 @@ impl Leaving {
 
         lock.flush().await?;
 
-        Ok(());
+        Ok(())
     }
 
     pub async fn handle(socket: TcpStream, chats: Arc<ChatTracker>) -> ChatResult<()> {
